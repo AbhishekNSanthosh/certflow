@@ -1,0 +1,17 @@
+{
+  "name": "CertFlow - Certificate Generator",
+"id": "1598636212518170563",
+  "api": "1.0.0",
+  "main": "code.js",
+  "documentAccess": "dynamic-page",
+  "ui": "ui.html",
+  "editorType": [
+    "figma"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "*"
+    ],
+    "reasoning": "This plugin needs network access to fetch CSV data from external URLs, including Google Sheets export links and other publicly accessible data sources, to generate certificates."
+  }
+}

@@ -1,0 +1,27 @@
+{
+    "name": "certflow",
+    "version": "1.0.0",
+    "description": "Figma plugin to generate certificates from CSV/Excel data",
+    "main": "code.js",
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc --watch"
+    },
+    "keywords": [
+        "figma",
+        "plugin",
+        "certificate",
+        "generator",
+        "csv",
+        "excel"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@figma/plugin-typings": "^1.90.0",
+        "typescript": "^5.3.3"
+    },
+    "dependencies": {
+        "xlsx": "^0.18.5"
+    }
+}
