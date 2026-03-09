@@ -537,6 +537,32 @@
       </div>
 
       <div class="section">
+        <div class="section-title">
+          <span class="badge">Step 4</span>
+          Frame Naming
+        </div>
+        <div class="input-group">
+          <label>Frame Name Pattern</label>
+          <p class="help-text">
+            Use {ColumnName} to insert dynamic data. Example: "Certificate -
+            {Name}"
+          </p>
+          <input
+            type="text"
+            id="frame-name-pattern"
+            value="Certificate - "
+            placeholder="Certificate - {Name}"
+          />
+        </div>
+        <div class="input-group">
+          <label>Insert Column Variable</label>
+          <select id="frame-name-column-select">
+            <option value="">-- Select Column to Insert --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section">
         <button id="generate" class="btn btn-primary">
           ✨ Generate Certificates
         </button>
@@ -691,6 +717,42 @@
         if (state.textLayers.length > 0) {
           autoMapFields();
         }
+
+        // Populate frame name column selector
+        const frameNameSelect = document.getElementById(
+          "frame-name-column-select",
+        );
+        frameNameSelect.innerHTML =
+          '<option value="">-- Select Column to Insert --</option>';
+        state.csvColumns.forEach((col) => {
+          const option = document.createElement("option");
+          option.value = `{${col}}`;
+          option.textContent = col;
+          frameNameSelect.appendChild(option);
+        });
+
+        // Add listener for insertion
+        frameNameSelect.onchange = (e) => {
+          const val = e.target.value;
+          if (val) {
+            const input = document.getElementById("frame-name-pattern");
+            // Insert at cursor position or append
+            if (input.selectionStart || input.selectionStart == "0") {
+              var startPos = input.selectionStart;
+              var endPos = input.selectionEnd;
+              input.value =
+                input.value.substring(0, startPos) +
+                val +
+                input.value.substring(endPos, input.value.length);
+              input.focus();
+              input.selectionEnd = startPos + val.length;
+            } else {
+              input.value += val;
+            }
+            // Reset select
+            e.target.value = "";
+          }
+        };
       }
 
       // Parse CSV line
@@ -883,6 +945,8 @@
                 type: "generate-certificates",
                 records: state.csvRecords,
                 mapping: state.fieldMapping,
+                frameNamePattern:
+                  document.getElementById("frame-name-pattern").value,
               },
             },
             "*",

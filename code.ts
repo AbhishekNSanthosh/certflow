@@ -149,7 +149,7 @@ async function generateCertificates(msg: any) {
     const certificates: SceneNode[] = [];
 
     // Re-fetch the node to ensure we have the latest properties/reference
-    const templateNode = figma.getNodeById(selectedTemplateNode.id) as FrameNode | ComponentNode | InstanceNode;
+    const templateNode = await figma.getNodeByIdAsync(selectedTemplateNode.id) as FrameNode | ComponentNode | InstanceNode;
 
     if (!templateNode) {
         throw new Error('Template node not found. Please select it again.');
@@ -195,10 +195,21 @@ async function generateCertificates(msg: any) {
         // Clone the template
         const clone = templateNode.clone();
 
-        // Try to get a name from the first mapped field
-        const firstMappedValue = Object.values(mapping)[0];
-        const recordName = record[firstMappedValue as string] || `Certificate ${i + 1}`;
-        clone.name = `Certificate - ${recordName}`;
+        // Set frame name
+        if (msg.frameNamePattern) {
+            let frameName = msg.frameNamePattern;
+            // Iterate over record keys and replace placeholders
+            for (const key of Object.keys(record)) {
+                // Use split/join for simple global replacement without regex issues
+                frameName = frameName.split(`{${key}}`).join(record[key] || '');
+            }
+            clone.name = frameName || `Certificate - ${i + 1}`;
+        } else {
+            // Legacy/Fallback behavior
+            const firstMappedValue = Object.values(mapping)[0];
+            const recordName = record[firstMappedValue as string] || `Certificate ${i + 1}`;
+            clone.name = `Certificate - ${recordName}`;
+        }
 
         // Replace text in all text nodes based on layer names
         await replaceTextByLayerName(clone, record, mapping);
@@ -240,8 +251,25 @@ async function replaceTextByLayerName(node: SceneNode, record: any, mapping: any
             const value = record[columnName] || '';
 
             if (value) {
-                // Load the font before modifying text
-                await figma.loadFontAsync(node.fontName as FontName);
+                // Check for mixed fonts (node has different fonts per character)
+                if (node.fontName === figma.mixed) {
+                    // Collect all unique fonts used across every character
+                    const uniqueFonts = new Map<string, FontName>();
+                    for (let i = 0; i < node.characters.length; i++) {
+                        const font = node.getRangeFontName(i, i + 1) as FontName;
+                        const key = `${font.family}::${font.style}`;
+                        if (!uniqueFonts.has(key)) {
+                            uniqueFonts.set(key, font);
+                        }
+                    }
+                    // Load all unique fonts
+                    for (const font of uniqueFonts.values()) {
+                        await figma.loadFontAsync(font);
+                    }
+                } else {
+                    // Single font — load it directly
+                    await figma.loadFontAsync(node.fontName as FontName);
+                }
                 node.characters = value;
             }
         }
